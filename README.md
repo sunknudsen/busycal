@@ -22,11 +22,13 @@ Open `lambda_function.py` and edit user-configurable variables.
 
 ### Run locally
 
-#### Step 1: install dependencies
+#### Step 1: install dependencies (macOS)
 
-> Heads-up: replace `3.13` with current Lambda Python runtime version (if applicable).
+> Heads-up: install [Homebrew](https://brew.sh/) and replace `3.13` with current Lambda Python runtime version (if applicable).
 
 ```console
+$ brew install python@3.13
+
 $ mkdir -p python/lib/python3.13/site-packages
 
 $ pip3.13 install --requirement requirements.txt --target python/lib/python3.13/site-packages
