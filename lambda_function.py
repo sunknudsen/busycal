@@ -49,7 +49,7 @@ def make_datetime(dt):
   if dt is None:
     raise ValueError("DTSTART or DTEND is missing.")
 
-  if hasattr(dt, 'dt'):
+  if hasattr(dt, "dt"):
     dt = dt.dt
 
   if isinstance(dt, datetime):
@@ -123,13 +123,13 @@ def adjust_recurring_event_base(event):
   and exclude events that have ended before now.
   """
   try:
-    event_start = make_datetime(event.get('DTSTART'))
-    event_end = make_datetime(event.get('DTEND'))
+    event_start = make_datetime(event.get("DTSTART"))
+    event_end = make_datetime(event.get("DTEND"))
 
     # Check RRULE for the UNTIL parameter
-    rrule = event.get('RRULE')
-    if rrule and 'UNTIL' in rrule:
-      until_date = make_datetime(rrule['UNTIL'][0])
+    rrule = event.get("RRULE")
+    if rrule and "UNTIL" in rrule:
+      until_date = make_datetime(rrule["UNTIL"][0])
       if until_date < datetime.now(TZ):
         debug_print(f"Recurring event has ended (UNTIL={until_date}). Excluding event.")
         return None  # Exclude the event
@@ -138,8 +138,8 @@ def adjust_recurring_event_base(event):
     adjusted_start, adjusted_end = adjust_to_work_hours(event_start, event_end)
     if adjusted_start and adjusted_end:
       # Update the event’s start and end times
-      event['DTSTART'] = adjusted_start
-      event['DTEND'] = adjusted_end
+      event["DTSTART"] = adjusted_start
+      event["DTEND"] = adjusted_end
       debug_print(f"Adjusted recurring event: {adjusted_start} to {adjusted_end}")
     else:
       debug_print(f"Excluded recurring event outside work hours: {event_start} to {event_end}")
@@ -155,9 +155,9 @@ def lambda_handler(event, context):
 
   try:
     combined_cal = Calendar()
-    combined_cal.add('PRODID', '-//Sun Knudsen//Combined shared calendar 1.0//EN')
-    combined_cal.add('VERSION', '2.0')
-    combined_cal.add('X-WR-CALNAME', CALENDAR_NAME)
+    combined_cal.add("PRODID", "-//Sun Knudsen//Combined shared calendar 1.0//EN")
+    combined_cal.add("VERSION", "2.0")
+    combined_cal.add("X-WR-CALNAME", CALENDAR_NAME)
 
     if not urls:
       debug_print("No URLs found in urls.txt.")
@@ -179,39 +179,39 @@ def lambda_handler(event, context):
       cal = Calendar.from_ical(req.text)
 
       for event in cal.walk("VEVENT"):
-        event_start = event.get('dtstart')
-        event_end = event.get('dtend')
+        event_start = event.get("DTSTART")
+        event_end = event.get("DTEND")
 
         if event_start and event_end:
           event_start = make_datetime(event_start)
           event_end = make_datetime(event_end)
 
           # Exclude non-recurring past events
-          if event_start < CUTOFF_DATE and 'RRULE' not in event:
+          if event_start < CUTOFF_DATE and "RRULE" not in event:
             debug_print(f"Skipping non-recurring past event: {event_start}")
             continue
 
           # Adjust event times to fit within work hours
           adjusted_start, adjusted_end = adjust_to_work_hours(event_start, event_end)
           if not adjusted_start or not adjusted_end:
-            debug_print(f"Skipping event outside work hours: {event_start} - {event_end}")
+            debug_print(f"Skipping event outside work hours: {event_start} to {event_end}")
             continue
 
           # Handle recurring events
-          if 'RRULE' in event:
+          if "RRULE" in event:
             adjusted_event = adjust_recurring_event_base(event)
             if not adjusted_event:
               debug_print(f"Skipping invalid or ended recurring event: {event}")
               continue
-            adjusted_start = adjusted_event.get('DTSTART')
-            adjusted_end = adjusted_event.get('DTEND')
+            adjusted_start = adjusted_event.get("DTSTART")
+            adjusted_end = adjusted_event.get("DTEND")
           else:
             adjusted_event = event
 
           # Use adjusted times explicitly
           copied_event = Event()
-          copied_event.add('dtstart', adjusted_start)
-          copied_event.add('dtend', adjusted_end)
+          copied_event.add("DTSTART", adjusted_start)
+          copied_event.add("DTEND", adjusted_end)
 
           # Add non-private attributes, excluding sensitive fields
           for attr in event:
@@ -222,7 +222,7 @@ def lambda_handler(event, context):
               else:
                 copied_event.add(attr, event[attr])
 
-          copied_event['SUMMARY'] = EVENT_NAME
+          copied_event["SUMMARY"] = EVENT_NAME
           combined_cal.add_component(copied_event)
 
     # Write the combined calendar to an ICS file locally when simulating runs
