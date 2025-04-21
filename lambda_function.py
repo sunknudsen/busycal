@@ -10,6 +10,7 @@ USER_TIMEZONE = "America/Montreal"  # Set timezone
 WORKWEEK_DAYS = {0, 1, 2, 3, 4}  # Set workweek days (Monday=0, Tuesday=1, …, Friday=4)
 START_TIME = time(9, 0)  # Set start time of workweek days (9:00 AM)
 END_TIME = time(17, 0)  # Set end time of workweek days (5:00 PM)
+ALL_DAY = False  # Set to True to include all events regardless of start and end time
 DAYS_IN_PAST = 7  # Set number of days in the past to include in combined calendar
 EVENT_NAME = "Busy"  # Set name for events
 EXCLUDED_FIELDS = {"ATTENDEE", "DESCRIPTION", "LOCATION", "ORGANIZER"}  # Set private data to exclude
@@ -70,17 +71,24 @@ def adjust_to_work_hours(event_start, event_end):
   adjusted_start = None
   adjusted_end = None
 
-  # If the event starts on a non-workday, move to the next workday’s START_TIME
+  if ALL_DAY:
+    start_time = time(0, 0)
+    end_time = time(23, 59, 59)
+  else:
+    start_time = START_TIME
+    end_time = END_TIME
+
+  # If the event starts on a non-workday, move to the next workday’s start_time
   if not is_work_week_day(event_start):
-    event_start = TZ.localize(datetime.combine(event_start.date() + timedelta(days=1), START_TIME))
+    event_start = TZ.localize(datetime.combine(event_start.date() + timedelta(days=1), start_time))
 
   # Define workday boundaries for the start and end dates
-  workday_start = TZ.localize(datetime.combine(event_start.date(), START_TIME))
-  workday_end = TZ.localize(datetime.combine(event_start.date(), END_TIME))
+  workday_start = TZ.localize(datetime.combine(event_start.date(), start_time))
+  workday_end = TZ.localize(datetime.combine(event_start.date(), end_time))
 
-  # If the event ends on a non-workday, truncate to the nearest prior workday’s END_TIME
+  # If the event ends on a non-workday, truncate to the nearest prior workday’s end_time
   if not is_work_week_day(event_end):
-    event_end = TZ.localize(datetime.combine(event_end.date() - timedelta(days=1), END_TIME))
+    event_end = TZ.localize(datetime.combine(event_end.date() - timedelta(days=1), end_time))
 
   # Case 1: Event starts and ends on the same workday
   if event_start.date() == event_end.date():
