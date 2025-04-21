@@ -14,7 +14,7 @@ ALL_DAY = False  # Set to True to include all events regardless of start and end
 DAYS_IN_PAST = 7  # Set number of days in the past to include in combined calendar
 EVENT_NAME = "Busy"  # Set name for events
 EXCLUDED_FIELDS = {"ATTENDEE", "DESCRIPTION", "LOCATION", "ORGANIZER"}  # Set private data to exclude
-ENABLE_DEBUG = False  # Enable or disable debugging
+ENABLE_DEBUG = False  # Set to True to enable debugging
 
 TZ = pytz.timezone(USER_TIMEZONE)  # Set timezone
 CUTOFF_DATE = datetime.now(TZ) - timedelta(days=DAYS_IN_PAST)  # Set cutoff date
